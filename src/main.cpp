@@ -23,6 +23,7 @@
 
 STM32_CAN Can(CAN1, DEF) ;
 static CAN_message_t CAN_TX_msg;
+static CAN_message_t CAN_RX_msg;
 
 struct __attribute__ ((packed)) t_line   {
   uint8_t id;
@@ -133,6 +134,13 @@ void print_line_values(uint16_t* values) {
      Serial.println("");
 }
 
+void read_can() {
+  if (Can.read(CAN_RX_msg)) {
+    Serial.print("received id: ");
+    Serial.println(CAN_RX_msg.id);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   init_can();
@@ -148,6 +156,7 @@ void loop() {
   print_line_values(line_sensors);
   update_can(line_sensors);
   update_leds(line_sensors);
-  delay(100);
+  read_can();
+  delay(1000);
   // put your main code here, to run repeatedly:
 }
