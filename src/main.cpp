@@ -79,6 +79,8 @@ void update_can(uint16_t* values) {
   //uint32_t var3 = (CAN_TX_msg.buf[1] << 16) +  CAN_TX_msg.buf[2];
   Serial.println(msg_content.value);
 
+  Can.write(CAN_TX_msg);
+
 }
 
 void print_line_values(uint16_t* values) {
