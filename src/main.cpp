@@ -41,6 +41,48 @@ int init_leds() {
   FastLED.addLeds<WS2812B, PB13>(leds_B, 5);
 }
 
+void update_leds(uint16_t*  values) {
+  for (size_t i = 0; i < 10; i++) {
+    uint8_t brightness = map(values[i], 0, 1023, 0, 255);
+    switch (i)
+    {
+    case 0:
+      leds_A[4] = brightness;
+      break;
+    case 1:
+      leds_A[3] = brightness;
+      break;
+    case 2:
+      leds_A[2] = brightness;
+      break;
+    case 3:
+      leds_A[1] = brightness;
+      break;
+    case 4:
+      leds_A[0] = brightness;
+      break;
+
+    case 5:
+      leds_B[0] = brightness;
+      break;
+    case 6:
+      leds_B[1] = brightness;
+      break;
+    case 7:
+      leds_B[2] = brightness;
+      break;
+    case 8:
+      leds_B[3] = brightness;
+      break;
+    case 9:
+      leds_B[4] = brightness;
+      break;
+    }
+  }
+
+  FastLED.show();
+}
+
 void update_line_sensors(int* sensors, uint16_t*  values) {
   for (size_t i = 0; i < 10; i++) {
     values[i] = analogRead(sensors[i]);
@@ -105,6 +147,7 @@ void loop() {
   update_line_sensors(sensors, line_sensors);
   print_line_values(line_sensors);
   update_can(line_sensors);
+  update_leds(line_sensors);
   delay(100);
   // put your main code here, to run repeatedly:
 }
