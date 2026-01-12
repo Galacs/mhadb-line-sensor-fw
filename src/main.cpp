@@ -5,7 +5,7 @@
 
 
 #define RGB1 PB12
-#define RGB1 PB13
+#define RGB2 PB13
 
 #define BTN1 PB7
 #define BTN2 PB6
@@ -21,28 +21,78 @@
 #define LS8 PB0
 #define LS9 PB1
 
-STM32_CAN Can( CAN1, DEF );
+STM32_CAN Can(CAN1, DEF) ;
+static CAN_message_t CAN_TX_msg;
+
+struct __attribute__ ((packed)) t_line   {
+  uint8_t id;
+  uint16_t  value;
+};
 
 int sensors[] = {LS1, LS2, LS3, LS4, LS5, LS6, LS7, LS8, LS9 };
 
 CRGB leds_A[5];
 CRGB leds_B[5];
 
-uint32_t line_sensors[10];
+uint16_t line_sensors[10];
 
 int init_leds() {
   FastLED.addLeds<WS2812B, PB12>(leds_A, 5);
   FastLED.addLeds<WS2812B, PB13>(leds_B, 5);
 }
 
-void update_line_sensors(int* sensors, uint32_t*  values) {
-   for (size_t i = 0; i < 10; i++)
-  {
+void update_line_sensors(int* sensors, uint16_t*  values) {
+  for (size_t i = 0; i < 10; i++) {
     values[i] = analogRead(sensors[i]);
   }
 }
 
+void init_can() {
+  Can.begin();
+  Can.setBaudRate(1000000);
+  Can.enableLoopBack();
+}
+
+void update_can(uint16_t* values) {
+
+  for (size_t i = 0; i < 10; i++) {
+    // Struct
+    t_line msg_content = {(uint8_t) i, values[i]};
+    CAN_TX_msg.len = sizeof(msg_content);
+    memcpy(CAN_TX_msg.buf, &msg_content, sizeof(msg_content));
+
+
+    // Manual
+    CAN_TX_msg.id = (0x69);
+    // CAN_TX_msg.len = 8;
+    // CAN_TX_msg.buf[0] =  i;
+    // CAN_TX_msg.buf[1] =  ((uint16_t) values[i] >> 16);
+    // CAN_TX_msg.buf[2] =  (uint16_t) values[i];
+    // CAN_TX_msg.buf[3] =  0;
+    // CAN_TX_msg.buf[4] =  0;
+    // CAN_TX_msg.buf[5] =  0;
+    // CAN_TX_msg.buf[6] =  0;
+    // CAN_TX_msg.buf[7] =  0;
+  }
+  t_line msg_content;
+  memcpy(&msg_content, CAN_TX_msg.buf, sizeof(msg_content));
+  //uint32_t var3 = (CAN_TX_msg.buf[1] << 16) +  CAN_TX_msg.buf[2];
+  Serial.println(msg_content.value);
+
+}
+
+void print_line_values(uint16_t* values) {
+     for (size_t i = 0; i < 10; i++) {
+        Serial.print(values[i]);
+        Serial.print(" ");
+     }
+     Serial.println("");
+}
+
 void setup() {
+  Serial.begin(115200);
+  init_can();
+
   // put your setup code here, to run once:
   pinMode(BTN1, INPUT_PULLUP);
   pinMode(BTN2, INPUT_PULLUP);  
@@ -50,5 +100,9 @@ void setup() {
 }
 
 void loop() {
+  update_line_sensors(sensors, line_sensors);
+  print_line_values(line_sensors);
+  update_can(line_sensors);
+  delay(100);
   // put your main code here, to run repeatedly:
 }
